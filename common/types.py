@@ -131,6 +131,18 @@ class DicomWebTarget(Target):
     def short_description(self) -> str:
         return self.url
 
+class GCPDicomWebTarget(Target):
+    target_type: Literal["gcpdicomweb"] = "gcpdicomweb"
+    project_id: str
+    location: str
+    dataset_id: str
+    dicom_store_id: str
+    gcp_key: Optional[str]
+
+    @property
+    def short_description(self) -> str:
+        return self.url
+
 
 class S3Target(Target):
     target_type: Literal["s3"] = "s3"

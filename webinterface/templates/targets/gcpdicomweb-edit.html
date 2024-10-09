@@ -1,0 +1,33 @@
+<div class="notification is-info" style="margin-top: 30px;">
+    <i class="fas fa-snowplow"></i>&nbsp;&nbsp;Support for GCP DICOMweb is experimental at this time.
+</div>                        
+
+<div class="field" style="margin-top: 30px;">
+    <label class="label">Project ID</label>
+    <div class="control">
+        <input name="project_id" class="input" required='true' autocomplete='off' type="text"
+            placeholder="Project ID" value="{{targets[edittarget].project_id}}"
+            size="15">
+    </div>
+</div>
+ <div class="field">
+    <label class="label">Location ID</label>
+    <div class="control">
+        <input name="gcp_location_id" class="input" required='true' autocomplete='off' placeholder="asia-south1"
+           value="{{targets[edittarget].gcp_location_id if targets[edittarget].gcp_location_id else ''}}">
+    </div>
+</div>
+<div class="field">
+    <label class="label">Dataset ID</label>
+    <div class="control">
+        <input name="gcp_dataset_id" class="input" required='true' autocomplete='off' placeholder="dataset_id"
+           value="{{targets[edittarget].gcp_dataset_id if targets[edittarget].gcp_dataset_id else ''}}">
+    </div>
+</div>
+<div class="field">
+    <label class="label">Dicom Store ID</label>
+    <div class="control">
+        <input name="gcp_dicom_store_id" class="input" required='true' autocomplete='off' placeholder="Dicom Store"
+           value="{{targets[edittarget].gcp_dicom_store_id if targets[edittarget].gcp_dicom_store_id else ''}}">
+    </div>
+</div>

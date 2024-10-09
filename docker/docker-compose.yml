@@ -2,6 +2,7 @@ version: "3.9"
 x-env: &env
   environment:
     MERCURE_RUNNER: docker
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/mercure/config/gcp.json
 
 x-volumes: &volumes
   volumes:

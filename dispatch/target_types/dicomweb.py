@@ -2,13 +2,14 @@ from pathlib import Path
 from requests.exceptions import HTTPError
 
 import pydicom
-from common.types import DicomWebTarget, TaskDispatch, Task
+from common.types import DicomWebTarget, TaskDispatch, Task, GCPDicomWebTarget
 from .base import TargetHandler
 from .registry import handler_for
 
 from dicomweb_client.api import DICOMwebClient
 from dicomweb_client.session_utils import create_session_from_user_pass
-
+from dicomweb_client.ext.gcp.session_utils import create_session_from_gcp_credentials
+from dicomweb_client.ext.gcp.uri import GoogleCloudHealthcareURL
 
 import common.config as config
 
@@ -40,7 +41,7 @@ class DicomWebTargetHandler(TargetHandler[DicomWebTarget]):
             headers=headers,
         )
         return client
-
+    
     def send_to_target(
         self, task_id: str, target: DicomWebTarget, dispatch_info: TaskDispatch, source_folder: Path, task: Task
     ) -> str:
@@ -69,6 +70,75 @@ class DicomWebTargetHandler(TargetHandler[DicomWebTarget]):
         return DicomWebTarget(**form)
 
     async def test_connection(self, target: DicomWebTarget, target_name: str):
+        client = self.create_client(target)
+
+        results = {}
+        try:
+            result = client._http_get(target.url)
+            results["authentication"] = True
+        except HTTPError as e:
+            if e.errno == 401:
+                results["authentication"] = False
+            else:
+                results["authentication"] = True
+
+        try:
+            client.search_for_studies(limit=1)
+            results["QIDO_query"] = True
+        except HTTPError as e:
+            results["QIDO_query"] = False
+
+        return results
+
+
+@handler_for(GCPDicomWebTarget)
+class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
+    view_template = "targets/gcpdicomweb.html"
+    edit_template = "targets/gcpdicomweb-edit.html"
+    # test_template = "targets/dicomweb-test.html"
+    icon = "fa-share-alt"
+    display_name = "GCP DICOMweb"
+
+    def create_client(self, target: GCPDicomWebTarget):
+        session = create_session_from_gcp_credentials()
+        project_id=target.project_id
+        location=target.location
+        dataset_id=target.dataset_id
+        dicom_store_id=target.dicom_store_id
+        url = GoogleCloudHealthcareURL(project_id=project_id,
+                                       location=location,
+                                       dataset_id=dataset_id,
+                                       dicom_store_id=dicom_store_id)
+        client = DICOMwebClient(
+            url=str(url),
+            session=session
+        )
+        return client
+
+    def send_to_target(
+        self, task_id: str, target: GCPDicomWebTarget, dispatch_info: TaskDispatch, source_folder: Path, task: Task
+    ) -> str:
+        client = self.create_client(target)
+        datasets = [pydicom.dcmread(str(k)) for k in source_folder.glob("**/*.dcm")]
+        response = client.store_instances(datasets)
+        if len(response.ReferencedSOPSequence) != len(datasets):
+            raise Exception("Did not store all datasets", response)
+
+        return ""
+
+    def from_form(self, form: dict, factory, current_target) -> GCPDicomWebTarget:
+        for x in [
+            "gcp_project_id",
+            "gcp_location_id",
+            "gcp_dataset_id",
+            "gcp_dicom_store_id",
+        ]:
+            if x in form and not form[x]:
+                form[x] = None
+
+        return GCPDicomWebTarget(**form)
+
+    async def test_connection(self, target: GCPDicomWebTarget, target_name: str):
         client = self.create_client(target)
 
         results = {}
