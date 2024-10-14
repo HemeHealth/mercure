@@ -101,7 +101,7 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
 
     def create_client(self, target: GCPDicomWebTarget):
         session = create_session_from_gcp_credentials()
-        print(target, "TARGET GCP DICOMWEB")
+        logger.info("{target} :: TARGET GCP DICOMWEB")
         project_id=target.project_id
         location=target.location
         dataset_id=target.dataset_id
@@ -128,7 +128,7 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
         return ""
 
     def from_form(self, form: dict, factory, current_target) -> GCPDicomWebTarget:
-        print(form, "form GCP DICOMWEB")
+        logger.info(f"{form}:: form GCP DICOMWEB")
         for x in [
             "project_id",
             "location_id",

@@ -141,7 +141,7 @@ class GCPDicomWebTarget(Target):
 
     @property
     def short_description(self) -> str:
-        return self.url
+        return self.project_id
 
 
 class S3Target(Target):
