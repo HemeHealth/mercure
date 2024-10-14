@@ -101,6 +101,7 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
 
     def create_client(self, target: GCPDicomWebTarget):
         session = create_session_from_gcp_credentials()
+        print(target, "TARGET GCP DICOMWEB")
         project_id=target.project_id
         location=target.location
         dataset_id=target.dataset_id
@@ -127,11 +128,12 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
         return ""
 
     def from_form(self, form: dict, factory, current_target) -> GCPDicomWebTarget:
+        print(form, "form GCP DICOMWEB")
         for x in [
-            "gcp_project_id",
-            "gcp_location_id",
-            "gcp_dataset_id",
-            "gcp_dicom_store_id",
+            "project_id",
+            "location_id",
+            "dataset_id",
+            "dicom_store_id",
         ]:
             if x in form and not form[x]:
                 form[x] = None
