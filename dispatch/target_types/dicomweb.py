@@ -96,12 +96,10 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
     view_template = "targets/gcpdicomweb.html"
     edit_template = "targets/gcpdicomweb-edit.html"
     # test_template = "targets/dicomweb-test.html"
-    icon = "fa-share-alt"
+    icon = "fa-google"
     display_name = "GCP DICOMweb"
 
-    def create_client(self, target: GCPDicomWebTarget):
-        session = create_session_from_gcp_credentials()
-        logger.info("{target} :: TARGET GCP DICOMWEB")
+    def get_client_url(self, target: GCPDicomWebTarget):
         project_id=target.project_id
         location=target.location
         dataset_id=target.dataset_id
@@ -110,6 +108,12 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
                                        location=location,
                                        dataset_id=dataset_id,
                                        dicom_store_id=dicom_store_id)
+        return url
+
+    def create_client(self, target: GCPDicomWebTarget):
+        session = create_session_from_gcp_credentials()
+        logger.info(f"{target} :: TARGET GCP DICOMWEB")
+        url = self.get_client_url(target=target)
         client = DICOMwebClient(
             url=str(url),
             session=session
@@ -120,6 +124,7 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
         self, task_id: str, target: GCPDicomWebTarget, dispatch_info: TaskDispatch, source_folder: Path, task: Task
     ) -> str:
         client = self.create_client(target)
+        logger.info(f"SEND_TO_TARGET GCP DICOMWEB")
         datasets = [pydicom.dcmread(str(k)) for k in source_folder.glob("**/*.dcm")]
         response = client.store_instances(datasets)
         if len(response.ReferencedSOPSequence) != len(datasets):
@@ -141,17 +146,16 @@ class GCPDicomWebTargetHandler(TargetHandler[GCPDicomWebTarget]):
         return GCPDicomWebTarget(**form)
 
     async def test_connection(self, target: GCPDicomWebTarget, target_name: str):
+        logger.info(f"test_connection GCP DICOMWEB")
+        url = self.get_client_url(target=target)
+        store_url = str(url).rstrip("/dicomWeb")
         client = self.create_client(target)
-
         results = {}
         try:
-            result = client._http_get(target.url)
+            _ = client._http_get(store_url)
             results["authentication"] = True
         except HTTPError as e:
-            if e.errno == 401:
-                results["authentication"] = False
-            else:
-                results["authentication"] = True
+            results["authentication"] = False
 
         try:
             client.search_for_studies(limit=1)
